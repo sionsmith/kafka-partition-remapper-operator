@@ -1,11 +1,10 @@
 # Build stage
-FROM rust:1.85-slim-bookworm AS builder
+FROM rust:1.83-slim-bookworm AS builder
 
 # Install build dependencies
 RUN apt-get update && apt-get install -y \
     pkg-config \
     libssl-dev \
-    cmake \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /workspace
@@ -13,19 +12,18 @@ WORKDIR /workspace
 # Copy manifests first for better caching
 COPY Cargo.toml Cargo.lock ./
 
-# Create dummy main.rs to build dependencies
+# Create dummy source files to build dependencies
 RUN mkdir -p src/bin && \
     echo "fn main() {}" > src/main.rs && \
-    echo "fn main() {}" > src/bin/crdgen.rs
+    echo "fn main() {}" > src/bin/crdgen.rs && \
+    echo "pub fn dummy() {}" > src/lib.rs
 
 # Build dependencies only (will be cached)
-RUN cargo build --release && rm -rf src
+RUN cargo build --release || true
+RUN rm -rf src
 
 # Copy actual source code
 COPY src ./src
-
-# Touch main.rs to invalidate the cache for final build
-RUN touch src/main.rs
 
 # Build the actual binary
 RUN cargo build --release --bin kafka-partition-remapper-operator
