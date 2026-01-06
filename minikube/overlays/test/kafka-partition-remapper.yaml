@@ -1,0 +1,42 @@
+# KafkaPartitionRemapper - exposes 100 virtual partitions mapped to 10 physical
+apiVersion: kafka.oso.sh/v1alpha1
+kind: KafkaPartitionRemapper
+metadata:
+  name: test-remapper
+  namespace: confluent
+spec:
+  replicas: 2
+
+  listen:
+    port: 9092
+    maxConnections: 100
+
+  kafka:
+    bootstrapServers:
+      - kafka.confluent.svc.cluster.local:9071
+    securityProtocol: PLAINTEXT
+
+  mapping:
+    virtualPartitions: 100
+    physicalPartitions: 10
+    offsetRange: 1099511627776  # 2^40
+
+  metrics:
+    enabled: true
+    port: 9090
+
+  logging:
+    level: debug
+    json: true
+
+  service:
+    type: ClusterIP
+
+  podTemplate:
+    resources:
+      requests:
+        cpu: 100m
+        memory: 128Mi
+      limits:
+        cpu: 500m
+        memory: 256Mi

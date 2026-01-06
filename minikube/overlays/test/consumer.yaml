@@ -1,0 +1,50 @@
+# Consumer that reads messages THROUGH the partition remapper proxy
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: kafka-consumer
+  namespace: confluent
+  labels:
+    app: kafka-consumer
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: kafka-consumer
+  template:
+    metadata:
+      labels:
+        app: kafka-consumer
+    spec:
+      containers:
+        - name: kafka-consumer
+          image: confluentinc/cp-kafka:7.5.0
+          command:
+            - /bin/bash
+            - -c
+            - |
+              echo "Waiting for Kafka and Proxy to be ready..."
+              sleep 120
+
+              # Connect through the partition remapper proxy
+              PROXY_BOOTSTRAP="test-remapper.confluent.svc.cluster.local:9092"
+
+              echo "Starting consumer through proxy..."
+              echo "Proxy endpoint: $PROXY_BOOTSTRAP"
+
+              kafka-console-consumer \
+                --bootstrap-server $PROXY_BOOTSTRAP \
+                --topic remapper-test-topic \
+                --group test-consumer-group \
+                --from-beginning \
+                --property "print.key=true" \
+                --property "print.partition=true" \
+                --property "print.offset=true"
+          resources:
+            requests:
+              cpu: 50m
+              memory: 128Mi
+            limits:
+              cpu: 200m
+              memory: 256Mi
+      restartPolicy: Always
