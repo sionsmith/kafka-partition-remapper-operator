@@ -1,0 +1,22 @@
+apiVersion: v2
+name: kafka-partition-remapper-operator
+description: A Kubernetes operator for managing Kafka partition remapper proxy instances
+type: application
+version: 0.1.0
+appVersion: "0.1.0"
+home: https://github.com/osodevops/kafka-partition-remapper-operator
+sources:
+  - https://github.com/osodevops/kafka-partition-remapper-operator
+  - https://github.com/osodevops/kafka-partition-remapper
+maintainers:
+  - name: sionsmith
+    email: dev@oso.sh
+    url: https://github.com/sionsmith
+keywords:
+  - kafka
+  - proxy
+  - partition-remapper
+  - operator
+  - cost-reduction
+annotations:
+  category: Infrastructure

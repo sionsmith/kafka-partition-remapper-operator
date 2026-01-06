@@ -1,0 +1,524 @@
+---
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  name: kafkapartitionremappers.kafka.oso.sh
+spec:
+  group: kafka.oso.sh
+  names:
+    categories: []
+    kind: KafkaPartitionRemapper
+    plural: kafkapartitionremappers
+    shortNames:
+    - kpr
+    singular: kafkapartitionremapper
+  scope: Namespaced
+  versions:
+  - additionalPrinterColumns:
+    - jsonPath: .status.phase
+      name: Phase
+      type: string
+    - jsonPath: .status.readyReplicas
+      name: Ready
+      type: string
+    - jsonPath: .spec.replicas
+      name: Replicas
+      type: integer
+    - jsonPath: .status.serviceEndpoint
+      name: Endpoint
+      type: string
+    - jsonPath: .status.compressionRatio
+      name: Ratio
+      type: string
+    - jsonPath: .metadata.creationTimestamp
+      name: Age
+      type: date
+    name: v1alpha1
+    schema:
+      openAPIV3Schema:
+        description: Auto-generated derived type for KafkaPartitionRemapperSpec via `CustomResource`
+        properties:
+          spec:
+            description: KafkaPartitionRemapper resource specification
+            properties:
+              kafka:
+                description: Kafka cluster connection configuration
+                properties:
+                  bootstrapServers:
+                    description: Bootstrap servers
+                    items:
+                      type: string
+                    type: array
+                  connectionTimeoutMs:
+                    default: 10000
+                    description: Connection timeout in milliseconds
+                    format: uint64
+                    minimum: 0.0
+                    type: integer
+                  metadataRefreshIntervalSecs:
+                    default: 30
+                    description: Metadata refresh interval in seconds (0 to disable)
+                    format: uint64
+                    minimum: 0.0
+                    type: integer
+                  requestTimeoutMs:
+                    default: 30000
+                    description: Request timeout in milliseconds
+                    format: uint64
+                    minimum: 0.0
+                    type: integer
+                  saslSecret:
+                    description: SASL configuration for broker connections
+                    nullable: true
+                    properties:
+                      mechanism:
+                        description: SASL mechanism (PLAIN, SCRAM-SHA-256, SCRAM-SHA-512)
+                        type: string
+                      name:
+                        description: Secret name
+                        type: string
+                      passwordKey:
+                        default: password
+                        description: Password key in secret
+                        type: string
+                      usernameKey:
+                        default: username
+                        description: Username key in secret
+                        type: string
+                    required:
+                    - mechanism
+                    - name
+                    type: object
+                  securityProtocol:
+                    default: PLAINTEXT
+                    description: Security protocol (PLAINTEXT, SSL, SASL_PLAINTEXT, SASL_SSL)
+                    type: string
+                  tlsSecret:
+                    description: TLS configuration for broker connections
+                    nullable: true
+                    properties:
+                      caKey:
+                        default: ca.crt
+                        description: CA certificate key in secret
+                        type: string
+                      certKey:
+                        description: Client certificate key in secret (for mTLS)
+                        nullable: true
+                        type: string
+                      insecureSkipVerify:
+                        default: false
+                        description: Skip server verification (NOT recommended for production)
+                        type: boolean
+                      keyKey:
+                        description: Client key key in secret (for mTLS)
+                        nullable: true
+                        type: string
+                      name:
+                        description: Secret name
+                        type: string
+                    required:
+                    - name
+                    type: object
+                required:
+                - bootstrapServers
+                type: object
+              listen:
+                description: TCP listener configuration for client connections
+                properties:
+                  advertisedAddress:
+                    description: Advertised address for client reconnections If not set, uses the Service endpoint automatically
+                    nullable: true
+                    type: string
+                  maxConnections:
+                    default: 1000
+                    description: Maximum concurrent client connections
+                    format: uint32
+                    minimum: 0.0
+                    type: integer
+                  port:
+                    default: 9092
+                    description: Port to listen on (container port)
+                    format: int32
+                    type: integer
+                  security:
+                    description: Client-facing security configuration
+                    nullable: true
+                    properties:
+                      protocol:
+                        default: PLAINTEXT
+                        description: Security protocol (PLAINTEXT, SSL, SASL_PLAINTEXT, SASL_SSL)
+                        type: string
+                      sasl:
+                        description: SASL authentication for clients
+                        nullable: true
+                        properties:
+                          credentialsSecret:
+                            description: Credentials secret reference (username/password pairs)
+                            properties:
+                              name:
+                                description: 'Secret name containing user credentials Format: each key is a username, value is the password'
+                                type: string
+                            required:
+                            - name
+                            type: object
+                          enabledMechanisms:
+                            default:
+                            - PLAIN
+                            description: Enabled SASL mechanisms (PLAIN, SCRAM-SHA-256, SCRAM-SHA-512, OAUTHBEARER)
+                            items:
+                              type: string
+                            type: array
+                        required:
+                        - credentialsSecret
+                        type: object
+                      tls:
+                        description: TLS configuration for client connections (server-side TLS)
+                        nullable: true
+                        properties:
+                          certificateSecret:
+                            description: Secret containing server certificate and key
+                            properties:
+                              certKey:
+                                default: tls.crt
+                                description: 'Key for certificate (default: tls.crt)'
+                                type: string
+                              keyKey:
+                                default: tls.key
+                                description: 'Key for private key (default: tls.key)'
+                                type: string
+                              name:
+                                description: Secret name
+                                type: string
+                            required:
+                            - name
+                            type: object
+                          clientCaSecret:
+                            description: Secret containing CA certificate for client verification (mTLS)
+                            nullable: true
+                            properties:
+                              key:
+                                default: ca.crt
+                                description: 'Key in secret (default: ca.crt)'
+                                type: string
+                              name:
+                                description: Secret name
+                                type: string
+                            required:
+                            - name
+                            type: object
+                          requireClientCert:
+                            default: false
+                            description: Require client certificates (mTLS mode)
+                            type: boolean
+                        required:
+                        - certificateSecret
+                        type: object
+                    type: object
+                type: object
+              logging:
+                default:
+                  json: false
+                  level: info
+                description: Logging configuration
+                properties:
+                  json:
+                    default: false
+                    description: Output logs in JSON format
+                    type: boolean
+                  level:
+                    default: info
+                    description: Log level (trace, debug, info, warn, error)
+                    type: string
+                type: object
+              mapping:
+                description: Partition remapping configuration
+                properties:
+                  offsetRange:
+                    default: 1099511627776
+                    description: 'Offset range per virtual partition group (default: 2^40)'
+                    format: uint64
+                    minimum: 0.0
+                    type: integer
+                  physicalPartitions:
+                    description: Number of physical partitions in Kafka cluster
+                    format: uint32
+                    minimum: 0.0
+                    type: integer
+                  topics:
+                    description: Per-topic mapping overrides
+                    items:
+                      description: Per-topic mapping override
+                      properties:
+                        offsetRange:
+                          description: Offset range for this topic
+                          format: uint64
+                          minimum: 0.0
+                          nullable: true
+                          type: integer
+                        physicalPartitions:
+                          description: Physical partitions for this topic
+                          format: uint32
+                          minimum: 0.0
+                          nullable: true
+                          type: integer
+                        topic:
+                          description: Topic name or regex pattern
+                          type: string
+                        virtualPartitions:
+                          description: Virtual partitions for this topic
+                          format: uint32
+                          minimum: 0.0
+                          nullable: true
+                          type: integer
+                      required:
+                      - topic
+                      type: object
+                    type: array
+                  virtualPartitions:
+                    description: Number of virtual partitions exposed to clients
+                    format: uint32
+                    minimum: 0.0
+                    type: integer
+                required:
+                - physicalPartitions
+                - virtualPartitions
+                type: object
+              metrics:
+                default:
+                  enabled: true
+                  port: 9090
+                description: Prometheus metrics configuration
+                properties:
+                  enabled:
+                    default: true
+                    description: Enable metrics endpoint
+                    type: boolean
+                  port:
+                    default: 9090
+                    description: Metrics port
+                    format: int32
+                    type: integer
+                type: object
+              podTemplate:
+                description: Pod template customizations
+                nullable: true
+                properties:
+                  affinity:
+                    description: Affinity rules (JSON/YAML format matching k8s affinity)
+                    nullable: true
+                  annotations:
+                    additionalProperties:
+                      type: string
+                    description: Pod annotations
+                    type: object
+                  image:
+                    description: Image override (defaults to ghcr.io/osodevops/kafka-partition-remapper)
+                    nullable: true
+                    type: string
+                  imagePullPolicy:
+                    description: Image pull policy
+                    nullable: true
+                    type: string
+                  imagePullSecrets:
+                    description: Image pull secrets (list of secret names)
+                    items:
+                      type: string
+                    type: array
+                  imageTag:
+                    description: Image tag override
+                    nullable: true
+                    type: string
+                  labels:
+                    additionalProperties:
+                      type: string
+                    description: Pod labels
+                    type: object
+                  nodeSelector:
+                    additionalProperties:
+                      type: string
+                    description: Node selector
+                    type: object
+                  resources:
+                    description: Resource requirements
+                    nullable: true
+                    properties:
+                      limits:
+                        additionalProperties:
+                          type: string
+                        description: Resource limits (cpu, memory)
+                        type: object
+                      requests:
+                        additionalProperties:
+                          type: string
+                        description: Resource requests (cpu, memory)
+                        type: object
+                    type: object
+                  securityContext:
+                    description: Security context (JSON/YAML format matching k8s pod security context)
+                    nullable: true
+                  serviceAccountName:
+                    description: Service account name
+                    nullable: true
+                    type: string
+                  tolerations:
+                    description: Tolerations (JSON/YAML format matching k8s tolerations)
+                    items:
+                      description: Toleration specification
+                      properties:
+                        effect:
+                          description: Toleration effect (NoSchedule, PreferNoSchedule, NoExecute)
+                          nullable: true
+                          type: string
+                        key:
+                          description: Toleration key
+                          nullable: true
+                          type: string
+                        operator:
+                          description: Toleration operator (Exists, Equal)
+                          nullable: true
+                          type: string
+                        tolerationSeconds:
+                          description: Toleration seconds (for NoExecute)
+                          format: int64
+                          nullable: true
+                          type: integer
+                        value:
+                          description: Toleration value
+                          nullable: true
+                          type: string
+                      type: object
+                    type: array
+                type: object
+              replicas:
+                default: 1
+                description: Number of proxy replicas for high availability
+                format: int32
+                type: integer
+              service:
+                default:
+                  type: ClusterIP
+                description: Kubernetes Service configuration
+                properties:
+                  annotations:
+                    additionalProperties:
+                      type: string
+                    description: Service annotations (for cloud load balancer configuration)
+                    type: object
+                  externalTrafficPolicy:
+                    description: External traffic policy (Cluster, Local)
+                    nullable: true
+                    type: string
+                  loadBalancerIp:
+                    description: LoadBalancer IP (if applicable)
+                    nullable: true
+                    type: string
+                  type:
+                    default: ClusterIP
+                    description: Service type (ClusterIP, LoadBalancer, NodePort)
+                    type: string
+                type: object
+              suspend:
+                default: false
+                description: Suspend proxy (scale to 0)
+                type: boolean
+            required:
+            - kafka
+            - listen
+            - mapping
+            type: object
+          status:
+            description: KafkaPartitionRemapper status
+            nullable: true
+            properties:
+              compressionRatio:
+                description: Compression ratio (virtual/physical partitions)
+                format: uint32
+                minimum: 0.0
+                nullable: true
+                type: integer
+              conditions:
+                description: Status conditions
+                items:
+                  description: Status condition
+                  properties:
+                    lastTransitionTime:
+                      description: Last transition time
+                      format: date-time
+                      type: string
+                    message:
+                      description: Human-readable message
+                      nullable: true
+                      type: string
+                    reason:
+                      description: Reason for the condition
+                      nullable: true
+                      type: string
+                    status:
+                      description: Status (True, False, Unknown)
+                      type: string
+                    type:
+                      description: Condition type (Ready, ConfigValid, DeploymentAvailable, ServiceReady)
+                      type: string
+                  required:
+                  - lastTransitionTime
+                  - status
+                  - type
+                  type: object
+                type: array
+              configMapName:
+                description: ConfigMap name for proxy configuration
+                nullable: true
+                type: string
+              deploymentName:
+                description: Deployment name
+                nullable: true
+                type: string
+              lastUpdateTime:
+                description: Last update time
+                format: date-time
+                nullable: true
+                type: string
+              message:
+                description: Human-readable message
+                nullable: true
+                type: string
+              metricsEndpoint:
+                description: Metrics endpoint URL
+                nullable: true
+                type: string
+              observedGeneration:
+                description: Observed generation
+                format: int64
+                nullable: true
+                type: integer
+              phase:
+                description: Current phase (Pending, Running, Degraded, Failed)
+                nullable: true
+                type: string
+              readyReplicas:
+                description: Current number of ready replicas
+                format: int32
+                nullable: true
+                type: integer
+              replicas:
+                description: Total number of replicas
+                format: int32
+                nullable: true
+                type: integer
+              serviceEndpoint:
+                description: Service endpoint for client connections
+                nullable: true
+                type: string
+              serviceName:
+                description: Service name
+                nullable: true
+                type: string
+            type: object
+        required:
+        - spec
+        title: KafkaPartitionRemapper
+        type: object
+    served: true
+    storage: true
+    subresources:
+      status: {}

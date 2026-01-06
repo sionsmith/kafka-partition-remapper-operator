@@ -1,0 +1,42 @@
+Thank you for installing {{ .Chart.Name }}!
+
+Your release is named: {{ .Release.Name }}
+
+To verify the installation, run:
+
+  kubectl get pods -l "app.kubernetes.io/name={{ include "kafka-partition-remapper-operator.name" . }},app.kubernetes.io/instance={{ .Release.Name }}"
+
+The operator is now watching for the following custom resources:
+  - KafkaPartitionRemapper
+
+To create a partition remapper proxy, apply a KafkaPartitionRemapper resource:
+
+  apiVersion: kafka.oso.sh/v1alpha1
+  kind: KafkaPartitionRemapper
+  metadata:
+    name: my-remapper
+  spec:
+    replicas: 2
+    listen:
+      port: 9092
+    kafka:
+      bootstrapServers:
+        - "kafka:9092"
+    mapping:
+      virtualPartitions: 1000
+      physicalPartitions: 100
+
+To check the status of your remapper:
+
+  kubectl get kafkapartitionremappers
+  kubectl describe kafkapartitionremapper my-remapper
+
+For more information, visit:
+  https://github.com/osodevops/kafka-partition-remapper-operator
+
+{{- if .Values.metrics.enabled }}
+
+Metrics are available at:
+  kubectl port-forward svc/{{ include "kafka-partition-remapper-operator.fullname" . }}-metrics 8080:8080
+  curl http://localhost:8080/metrics
+{{- end }}

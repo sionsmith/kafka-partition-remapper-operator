@@ -1,0 +1,102 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: {{ include "kafka-partition-remapper-operator.fullname" . }}
+  labels:
+    {{- include "kafka-partition-remapper-operator.labels" . | nindent 4 }}
+rules:
+  # Core resources - Secrets (read-only for Kafka credentials/TLS)
+  - apiGroups: [""]
+    resources:
+      - secrets
+    verbs:
+      - get
+      - list
+      - watch
+
+  # Core resources - ConfigMaps (for proxy configuration)
+  - apiGroups: [""]
+    resources:
+      - configmaps
+    verbs:
+      - get
+      - list
+      - watch
+      - create
+      - update
+      - patch
+      - delete
+
+  # Core resources - Services (for proxy access)
+  - apiGroups: [""]
+    resources:
+      - services
+    verbs:
+      - get
+      - list
+      - watch
+      - create
+      - update
+      - patch
+      - delete
+
+  # Core resources - Events (for status reporting)
+  - apiGroups: [""]
+    resources:
+      - events
+    verbs:
+      - create
+      - patch
+
+  # Apps resources - Deployments (for proxy pods)
+  - apiGroups: ["apps"]
+    resources:
+      - deployments
+    verbs:
+      - get
+      - list
+      - watch
+      - create
+      - update
+      - patch
+      - delete
+
+  # Custom resources - KafkaPartitionRemapper
+  - apiGroups: ["kafka.oso.sh"]
+    resources:
+      - kafkapartitionremappers
+    verbs:
+      - get
+      - list
+      - watch
+      - create
+      - update
+      - patch
+      - delete
+  - apiGroups: ["kafka.oso.sh"]
+    resources:
+      - kafkapartitionremappers/status
+    verbs:
+      - get
+      - update
+      - patch
+  - apiGroups: ["kafka.oso.sh"]
+    resources:
+      - kafkapartitionremappers/finalizers
+    verbs:
+      - update
+
+  {{- if .Values.leaderElection.enabled }}
+  # Coordination for leader election
+  - apiGroups: ["coordination.k8s.io"]
+    resources:
+      - leases
+    verbs:
+      - get
+      - list
+      - watch
+      - create
+      - update
+      - patch
+      - delete
+  {{- end }}
