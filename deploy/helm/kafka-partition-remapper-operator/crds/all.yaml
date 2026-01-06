@@ -305,7 +305,7 @@ spec:
                 properties:
                   affinity:
                     description: Affinity rules (JSON/YAML format matching k8s affinity)
-                    nullable: true
+                    type: object
                   annotations:
                     additionalProperties:
                       type: string
@@ -355,7 +355,7 @@ spec:
                     type: object
                   securityContext:
                     description: Security context (JSON/YAML format matching k8s pod security context)
-                    nullable: true
+                    type: object
                   serviceAccountName:
                     description: Service account name
                     nullable: true
@@ -388,6 +388,9 @@ spec:
                           type: string
                       type: object
                     type: array
+                required:
+                - affinity
+                - securityContext
                 type: object
               replicas:
                 default: 1

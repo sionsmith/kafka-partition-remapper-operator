@@ -56,8 +56,9 @@ async fn main() -> anyhow::Result<()> {
 
 /// Initialize tracing subscriber
 fn init_tracing() {
-    let env_filter = EnvFilter::try_from_default_env()
-        .unwrap_or_else(|_| EnvFilter::new("info,kafka_partition_remapper_operator=debug,kube=warn,hyper=warn"));
+    let env_filter = EnvFilter::try_from_default_env().unwrap_or_else(|_| {
+        EnvFilter::new("info,kafka_partition_remapper_operator=debug,kube=warn,hyper=warn")
+    });
 
     tracing_subscriber::registry()
         .with(env_filter)

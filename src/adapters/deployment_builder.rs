@@ -2,8 +2,8 @@
 
 use k8s_openapi::api::apps::v1::{Deployment, DeploymentSpec};
 use k8s_openapi::api::core::v1::{
-    Container, ContainerPort, EnvVar, PodSpec, PodTemplateSpec, Probe, TCPSocketAction,
-    Volume, VolumeMount, ConfigMapVolumeSource, LocalObjectReference,
+    ConfigMapVolumeSource, Container, ContainerPort, EnvVar, LocalObjectReference, PodSpec,
+    PodTemplateSpec, Probe, TCPSocketAction, Volume, VolumeMount,
 };
 use k8s_openapi::apimachinery::pkg::apis::meta::v1::{LabelSelector, ObjectMeta, OwnerReference};
 use k8s_openapi::apimachinery::pkg::util::intstr::IntOrString;
@@ -278,9 +278,7 @@ fn build_pod_spec(spec: &KafkaPartitionRemapperSpec, config_map_name: &str) -> P
             pod_spec.image_pull_secrets = Some(
                 pt.image_pull_secrets
                     .iter()
-                    .map(|s| LocalObjectReference {
-                        name: s.clone(),
-                    })
+                    .map(|s| LocalObjectReference { name: s.clone() })
                     .collect(),
             );
         }

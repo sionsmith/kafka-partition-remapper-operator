@@ -15,7 +15,7 @@ use tracing::{error, info, instrument};
 
 use crate::controllers::Context;
 use crate::crd::KafkaPartitionRemapper;
-use crate::metrics::prometheus::{RECONCILIATIONS, RECONCILE_DURATION, RECONCILIATION_ERRORS};
+use crate::metrics::prometheus::{RECONCILE_DURATION, RECONCILIATIONS, RECONCILIATION_ERRORS};
 use crate::reconcilers::remapper;
 use crate::Error;
 
@@ -53,7 +53,9 @@ async fn reconcile(
     let ns = remapper.namespace().unwrap_or_default();
     let name = remapper.name_any();
 
-    RECONCILIATIONS.with_label_values(&["KafkaPartitionRemapper"]).inc();
+    RECONCILIATIONS
+        .with_label_values(&["KafkaPartitionRemapper"])
+        .inc();
 
     let remappers: Api<KafkaPartitionRemapper> = Api::namespaced(ctx.client.clone(), &ns);
 
@@ -100,7 +102,8 @@ async fn apply(remapper: &KafkaPartitionRemapper, ctx: &Context) -> Result<Actio
     let config_map_name = remapper::reconcile_config_map(remapper, &ctx.client, &ns).await?;
 
     // Reconcile Deployment
-    let deployment_name = remapper::reconcile_deployment(remapper, &ctx.client, &ns, &config_map_name).await?;
+    let deployment_name =
+        remapper::reconcile_deployment(remapper, &ctx.client, &ns, &config_map_name).await?;
 
     // Reconcile Service
     let service_name = remapper::reconcile_service(remapper, &ctx.client, &ns).await?;
@@ -138,15 +141,14 @@ fn error_policy(remapper: Arc<KafkaPartitionRemapper>, err: &Error, _ctx: Arc<Co
     let ns = remapper.namespace().unwrap_or_default();
     let name = remapper.name_any();
 
-    error!(
-        "Reconciliation error for {}/{}: {:?}",
-        ns, name, err
-    );
+    error!("Reconciliation error for {}/{}: {:?}", ns, name, err);
 
     // Requeue with exponential backoff based on error type
     match err {
         Error::KubeError(_) => Action::requeue(Duration::from_secs(30)),
-        Error::ConfigError(_) | Error::ValidationError(_) => Action::requeue(Duration::from_secs(300)),
+        Error::ConfigError(_) | Error::ValidationError(_) => {
+            Action::requeue(Duration::from_secs(300))
+        }
         _ => Action::requeue(Duration::from_secs(60)),
     }
 }

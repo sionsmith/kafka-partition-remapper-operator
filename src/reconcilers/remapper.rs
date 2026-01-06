@@ -38,7 +38,7 @@ pub fn validate(remapper: &KafkaPartitionRemapper) -> Result<()> {
         ));
     }
 
-    if spec.mapping.virtual_partitions % spec.mapping.physical_partitions != 0 {
+    if !spec.mapping.virtual_partitions.is_multiple_of(spec.mapping.physical_partitions) {
         return Err(Error::ValidationError(
             "mapping.virtualPartitions must be evenly divisible by mapping.physicalPartitions"
                 .to_string(),
@@ -56,9 +56,7 @@ pub fn validate(remapper: &KafkaPartitionRemapper) -> Result<()> {
 
     // Validate replicas
     if spec.replicas < 0 {
-        return Err(Error::ValidationError(
-            "replicas must be >= 0".to_string(),
-        ));
+        return Err(Error::ValidationError("replicas must be >= 0".to_string()));
     }
 
     // Validate security protocol
@@ -254,13 +252,18 @@ pub async fn update_status(
         type_: "DeploymentAvailable".to_string(),
         status: if ready_replicas > 0 { "True" } else { "False" }.to_string(),
         last_transition_time: now,
-        reason: Some(if ready_replicas > 0 {
-            "ReplicasAvailable"
-        } else {
-            "NoReplicasAvailable"
-        }
-        .to_string()),
-        message: Some(format!("{}/{} replicas ready", ready_replicas, spec.replicas)),
+        reason: Some(
+            if ready_replicas > 0 {
+                "ReplicasAvailable"
+            } else {
+                "NoReplicasAvailable"
+            }
+            .to_string(),
+        ),
+        message: Some(format!(
+            "{}/{} replicas ready",
+            ready_replicas, spec.replicas
+        )),
     });
 
     conditions.push(Condition {

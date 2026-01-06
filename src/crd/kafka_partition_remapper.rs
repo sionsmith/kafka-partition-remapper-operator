@@ -439,6 +439,7 @@ pub struct PodTemplateSpec {
 
     /// Affinity rules (JSON/YAML format matching k8s affinity)
     #[serde(skip_serializing_if = "Option::is_none")]
+    #[schemars(schema_with = "any_object_schema")]
     pub affinity: Option<serde_json::Value>,
 
     /// Resource requirements
@@ -467,7 +468,16 @@ pub struct PodTemplateSpec {
 
     /// Security context (JSON/YAML format matching k8s pod security context)
     #[serde(skip_serializing_if = "Option::is_none")]
+    #[schemars(schema_with = "any_object_schema")]
     pub security_context: Option<serde_json::Value>,
+}
+
+/// Generate a schema for arbitrary JSON objects
+fn any_object_schema(_gen: &mut schemars::gen::SchemaGenerator) -> schemars::schema::Schema {
+    schemars::schema::Schema::Object(schemars::schema::SchemaObject {
+        instance_type: Some(schemars::schema::InstanceType::Object.into()),
+        ..Default::default()
+    })
 }
 
 /// Toleration specification

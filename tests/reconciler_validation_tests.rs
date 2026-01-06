@@ -5,8 +5,8 @@
 
 use k8s_openapi::apimachinery::pkg::apis::meta::v1::ObjectMeta;
 use kafka_partition_remapper_operator::crd::{
-    KafkaClusterSpec, KafkaPartitionRemapper, KafkaPartitionRemapperSpec, ListenSpec,
-    LoggingSpec, MappingSpec, MetricsSpec, ServiceSpec,
+    KafkaClusterSpec, KafkaPartitionRemapper, KafkaPartitionRemapperSpec, ListenSpec, LoggingSpec,
+    MappingSpec, MetricsSpec, ServiceSpec,
 };
 use kafka_partition_remapper_operator::reconcilers::remapper;
 
@@ -172,11 +172,11 @@ fn remapper_virtual_not_divisible_by_physical_fails_validation() {
 #[test]
 fn remapper_valid_partition_ratios_pass_validation() {
     let valid_ratios = vec![
-        (100, 100),   // 1:1
-        (100, 200),   // 1:2
-        (100, 1000),  // 1:10
-        (50, 500),    // 1:10
-        (10, 100),    // 1:10
+        (100, 100),  // 1:1
+        (100, 200),  // 1:2
+        (100, 1000), // 1:10
+        (50, 500),   // 1:10
+        (10, 100),   // 1:10
     ];
 
     for (physical, virtual_p) in valid_ratios {

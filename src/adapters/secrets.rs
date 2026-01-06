@@ -19,7 +19,7 @@ pub fn get_secret_key(secret: &Secret, key: &str) -> Result<String> {
     let data = secret
         .data
         .as_ref()
-        .ok_or_else(|| Error::SecretError(format!("Secret has no data")))?;
+        .ok_or_else(|| Error::SecretError("Secret has no data".to_string()))?;
 
     let value = data
         .get(key)
